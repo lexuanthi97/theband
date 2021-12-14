@@ -1,0 +1,46 @@
+@media(max-width: 740px) {
+
+
+    #header {
+        overflow: hidden;
+        
+       
+        
+       
+    }
+    #header .nav > li {
+        float:none;
+        background-color: #000;
+        
+    }
+
+    .nav .ti-search {
+        display: none;
+    }
+
+    .nav .ti-menu {
+        color: #fff;
+        line-height: 46.5px;
+        padding: 0 24px;
+        float:right;
+    }
+    #slider .conten-slider {
+        display: none;
+    }
+    .list-item .item {
+        text-align: center;
+        float: none;
+        width: 100%;;
+    }
+    .buy .city {
+        float: none;
+        width: 100%;
+    }
+    .col-haf {
+
+        width: 100%;
+    }
+    .contac-infomation {
+        margin-bottom: 16px;
+    }
+}
