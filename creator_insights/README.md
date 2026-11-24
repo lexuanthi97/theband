@@ -22,6 +22,15 @@ Dashboard: `https://lexuanthi97.github.io/theband/insights/` (sau khi merge vào
 3. Lọc bỏ từ khóa lạc đề (ví dụ "lập trình game"), chấm điểm và so sánh với các ngày trước.
 4. Ghi kết quả vào `insights/data/` rồi commit. Dashboard đọc các file này.
 
+## Cài app lên điện thoại
+
+Dashboard là một web app cài được (PWA): có icon ngoài màn hình chính, mở toàn màn hình, xem được dữ liệu gần nhất khi mất mạng.
+
+- **Android (Chrome):** mở `https://lexuanthi97.github.io/theband/insights/`, bấm **Cài app lên điện thoại** (hoặc menu ⋮ → **Cài đặt ứng dụng**).
+- **iPhone (Safari):** mở link trên bằng Safari, chạm **Chia sẻ** → **Thêm vào MH chính**.
+
+Dữ liệu trong app tự mới mỗi sáng sau khi GitHub Actions chạy xong. Nút "Tra cứu trực tiếp" chỉ có khi chạy `serve` trên máy tính.
+
 ## Chạy trên máy (Windows / Mac / Linux)
 
 Chỉ cần Python 3.10 trở lên, không phải cài thêm gói nào.

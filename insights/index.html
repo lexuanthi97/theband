@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Search Insights Tự động hóa</title>
 <meta name="description" content="Từ khóa đang được tìm nhiều trên TikTok về PLC, HMI, servo, biến tần và tự động hóa — cập nhật mỗi ngày.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151d25" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Insights">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
@@ -63,7 +72,11 @@ button, input, select { font: inherit; color: inherit; }
 
 /* Thanh trạng thái */
 .status { background: var(--surface); border-bottom: 1px solid var(--line); }
+.status { padding-top: env(safe-area-inset-top, 0px); }
 .status .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 14px; }
+.install { border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent-ink); border-radius: 6px; padding: 4px 10px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.ios-tip { margin-top: 12px; padding: 12px 14px; border-radius: 8px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.offline { margin-top: 12px; padding: 8px 12px; border-radius: 8px; background: var(--surface-2); border: 1px dashed var(--line); font-size: 13px; color: var(--muted); }
 .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
 .lamp { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
 .lamp.off { background: var(--muted); box-shadow: 0 0 0 4px var(--bar-track); }
@@ -153,6 +166,7 @@ footer p { margin: 0 0 8px; }
 .toast.show { opacity: 1; }
 
 @media (max-width: 760px) {
+  .desk-only { display: none; }
   .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .head { display: none; }
   .row-main { grid-template-columns: 32px minmax(0, 1fr) 72px; grid-template-areas: "r k k" "r g s"; row-gap: 8px; }
@@ -178,11 +192,17 @@ footer p { margin: 0 0 8px; }
       <label for="dateSel">Ngày dữ liệu</label>
       <select id="dateSel"></select>
       <span id="genAt"></span>
+      <button class="install" id="installBtn" type="button" hidden>Cài app lên điện thoại</button>
     </div>
   </div>
 </header>
 
 <main class="wrap">
+  <div class="ios-tip" id="iosTip" hidden>
+    <span>Cài app trên iPhone: mở trang này bằng <b>Safari</b>, chạm nút <b>Chia sẻ</b> (ô vuông có mũi tên lên) rồi chọn <b>Thêm vào MH chính</b>.</span>
+    <button class="mini" id="iosTipClose" type="button">Đóng</button>
+  </div>
+  <div class="offline" id="offline" hidden>Đang ngoại tuyến — hiển thị dữ liệu đã lưu lần trước.</div>
   <div class="summary" id="summary">
     <button class="sum" data-filter="all" aria-pressed="true"><b id="nAll">–</b><span>Từ khóa đang theo dõi</span></button>
     <button class="sum up" data-filter="rising" aria-pressed="false"><b id="nUp">–</b><span>Đang tăng</span></button>
@@ -194,7 +214,7 @@ footer p { margin: 0 0 8px; }
     <input id="q" type="search" placeholder="Lọc từ khóa, ví dụ: servo, s7 1200, biến tần…" autocomplete="off" aria-label="Tìm từ khóa">
     <button id="liveBtn" type="submit" hidden>Tra cứu trực tiếp</button>
   </form>
-  <p class="hint" id="hint">Gõ để lọc danh sách. Chạy <code>python -m creator_insights serve</code> trên máy để tra cứu trực tiếp bất kỳ từ khóa nào.</p>
+  <p class="hint" id="hint">Gõ để lọc danh sách.<span class="desk-only"> Chạy <code>python -m creator_insights serve</code> trên máy tính để tra cứu trực tiếp bất kỳ từ khóa nào.</span></p>
 
   <div id="banner"></div>
 
@@ -415,6 +435,24 @@ footer p { margin: 0 0 8px; }
     try { state.lookup = null; load(await getJSON(`data/history/${e.target.value}.json`)); }
     catch { toast("Không mở được dữ liệu ngày này"); }
   });
+  // ---- App trên điện thoại (PWA)
+  const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let installEvt = null;
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("installBtn").hidden = false; });
+  addEventListener("appinstalled", () => { $("installBtn").hidden = true; toast("Đã cài app"); });
+  if (!standalone && isIOS) $("installBtn").hidden = false;
+  $("installBtn").addEventListener("click", async () => {
+    if (installEvt) { installEvt.prompt(); await installEvt.userChoice.catch(() => {}); installEvt = null; $("installBtn").hidden = true; }
+    else $("iosTip").hidden = false;
+  });
+  $("iosTipClose").addEventListener("click", () => { $("iosTip").hidden = true; });
+  const net = () => { $("offline").hidden = navigator.onLine; };
+  addEventListener("online", net); addEventListener("offline", net); net();
+  if ("serviceWorker" in navigator && location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  }
+
   init();
 })();
 </script>
