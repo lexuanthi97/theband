@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Search Insights Tự động hóa</title>
+<meta name="description" content="Từ khóa đang được tìm nhiều trên TikTok về PLC, HMI, servo, biến tần và tự động hóa — cập nhật mỗi ngày.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: bảng điều khiển kiểu HMI — thanh trạng thái, tab nhóm như địa chỉ I/O, danh sách từ khóa có thanh đo 0–100. */
+:root {
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --surface-2: #f6f8fa;
+  --fg: #152029;
+  --muted: #5a6977;
+  --line: #d6dde4;
+  --accent: #d98200;
+  --accent-ink: #9a5a00;
+  --accent-soft: #fff1d9;
+  --up: #1c8a4b;
+  --up-soft: #e1f4e8;
+  --down: #be3f2b;
+  --down-soft: #fbe6e2;
+  --new: #2a64cf;
+  --new-soft: #e3ecfc;
+  --bar-track: #e4e9ee;
+  --font-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e141a; --surface: #151d25; --surface-2: #1a242e; --fg: #e4ebf1; --muted: #8b9aa8; --line: #26323d;
+    --accent: #f2a632; --accent-ink: #f7bd62; --accent-soft: #33260f;
+    --up: #45c27e; --up-soft: #143222; --down: #ee7b66; --down-soft: #3a1c17; --new: #79a6ff; --new-soft: #17264a;
+    --bar-track: #222d38; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e141a; --surface: #151d25; --surface-2: #1a242e; --fg: #e4ebf1; --muted: #8b9aa8; --line: #26323d;
+  --accent: #f2a632; --accent-ink: #f7bd62; --accent-soft: #33260f;
+  --up: #45c27e; --up-soft: #143222; --down: #ee7b66; --down-soft: #3a1c17; --new: #79a6ff; --new-soft: #17264a;
+  --bar-track: #222d38; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg);
+  font: 15px/1.5 var(--font-body);
+}
+a { color: inherit; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap {
+  max-width: 1080px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Thanh trạng thái */
+.status { background: var(--surface); border-bottom: 1px solid var(--line); }
+.status .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; padding-block: 14px; }
+.brand { display: flex; align-items: center; gap: 10px; margin-right: auto; min-width: 0; }
+.lamp { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
+.lamp.off { background: var(--muted); box-shadow: 0 0 0 4px var(--bar-track); }
+.brand h1 { margin: 0; font: 700 26px/1 var(--font-display); letter-spacing: .01em; text-transform: uppercase; }
+.brand small { display: block; font: 500 12px/1.3 var(--font-body); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; font-size: 13px; color: var(--muted); }
+.meta select { background: var(--surface-2); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font-family: var(--font-mono); font-size: 13px; }
+
+/* Tóm tắt */
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin-top: 20px; }
+.sum { background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; text-align: left; border: 0; cursor: pointer; }
+.sum:hover { background: var(--surface-2); }
+.sum[aria-pressed="true"] { background: var(--accent-soft); }
+.sum b { font: 600 30px/1.1 var(--font-display); font-variant-numeric: tabular-nums; }
+.sum span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.sum.up b { color: var(--up); } .sum.new b { color: var(--new); } .sum.opp b { color: var(--accent-ink); }
+
+/* Tìm kiếm */
+.searchbar { display: flex; gap: 8px; margin-top: 20px; }
+.searchbar input { flex: 1; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.searchbar button { border: 1px solid var(--accent); background: var(--accent); color: #1b1203; font-weight: 600; border-radius: 8px; padding: 0 16px; cursor: pointer; white-space: nowrap; }
+.searchbar button[hidden] { display: none; }
+.hint { font-size: 13px; color: var(--muted); margin: 6px 2px 0; }
+
+/* Tab nhóm */
+.tabs { display: flex; gap: 6px; overflow-x: auto; margin-top: 20px; padding-bottom: 4px; scrollbar-width: thin; }
+.tab { flex: none; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px; cursor: pointer; white-space: nowrap; }
+.tab code { font: 500 11px/1 var(--font-mono); color: var(--muted); background: var(--surface-2); border: 1px solid var(--line); border-radius: 4px; padding: 3px 5px; }
+.tab em { font-style: normal; font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.tab[aria-selected="true"] { border-color: var(--fg); background: var(--fg); color: var(--bg); }
+.tab[aria-selected="true"] code { background: transparent; color: var(--bg); border-color: color-mix(in srgb, var(--bg) 40%, transparent); }
+.tab[aria-selected="true"] em { color: var(--bg); }
+.tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 13px; color: var(--muted); }
+.tools select { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; }
+
+/* Danh sách */
+.list { margin-top: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.head, .row-main { display: grid; grid-template-columns: 44px minmax(0, 1fr) 150px 96px 56px; gap: 12px; align-items: center; padding: 10px 16px; }
+.head { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.row + .row { border-top: 1px solid var(--line); }
+.row-main { cursor: pointer; width: 100%; background: none; border: 0; text-align: left; }
+.row-main:hover { background: var(--surface-2); }
+.rank { font: 500 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.kw { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.kw strong { font-weight: 600; font-size: 15.5px; overflow-wrap: anywhere; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.chip { font-size: 11.5px; line-height: 1; padding: 4px 7px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip.up { background: var(--up-soft); color: var(--up); border-color: transparent; }
+.chip.down { background: var(--down-soft); color: var(--down); border-color: transparent; }
+.chip.new { background: var(--new-soft); color: var(--new); border-color: transparent; }
+.chip.opp { background: var(--accent-soft); color: var(--accent-ink); border-color: transparent; font-weight: 600; }
+.chip.hot { background: var(--down-soft); color: var(--down); border-color: transparent; font-weight: 600; }
+.gauge { display: flex; align-items: center; gap: 8px; }
+.gauge .bar { flex: 1; height: 8px; background: var(--bar-track); border-radius: 2px; position: relative; overflow: hidden;
+  background-image: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), var(--surface) calc(10% - 1px) 10%); }
+.gauge .fill { position: absolute; inset: 0 auto 0 0; background: var(--accent); border-radius: 2px; }
+.gauge b { font: 600 14px var(--font-mono); width: 28px; text-align: right; font-variant-numeric: tabular-nums; }
+.spark { width: 96px; height: 28px; display: block; }
+.spark .area { fill: var(--accent-soft); } .spark .line { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.spark .dot { fill: var(--accent); } .spark .base { stroke: var(--line); stroke-width: 1; }
+.srcs { display: flex; gap: 3px; justify-content: flex-end; }
+.src { font: 600 10px/1 var(--font-mono); width: 16px; height: 16px; display: grid; place-items: center; border-radius: 3px; background: var(--bar-track); color: var(--muted); }
+.src.on { background: var(--fg); color: var(--bg); }
+
+.detail { padding: 4px 16px 18px 72px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.detail h3 { margin: 0 0 8px; font: 600 13px/1.2 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.detail ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.detail li { font-size: 14px; }
+.idea { display: flex; gap: 8px; align-items: flex-start; }
+.idea span { flex: 1; min-width: 0; }
+.mini { border: 1px solid var(--line); background: var(--surface); border-radius: 5px; font-size: 12px; padding: 2px 8px; cursor: pointer; white-space: nowrap; }
+.mini:hover { border-color: var(--accent); }
+.rel { border: 0; background: none; padding: 0; cursor: pointer; text-align: left; text-decoration: underline; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.rel:hover { text-decoration-color: var(--accent); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; font-family: var(--font-mono); font-size: 13px; }
+.note { font-size: 13px; color: var(--muted); }
+.note.opp { color: var(--accent-ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--fg); background: var(--fg); color: var(--bg); border-radius: 6px; padding: 6px 12px; font-size: 13px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.btn.ghost { background: transparent; color: var(--fg); border-color: var(--line); }
+
+.empty { padding: 40px 16px; text-align: center; color: var(--muted); }
+.banner { margin-top: 16px; padding: 10px 14px; border-radius: 8px; background: var(--accent-soft); color: var(--accent-ink); font-size: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+footer { margin: 28px 0 40px; font-size: 13px; color: var(--muted); max-width: 72ch; }
+footer p { margin: 0 0 8px; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+
+@media (max-width: 760px) {
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .head { display: none; }
+  .row-main { grid-template-columns: 32px minmax(0, 1fr) 72px; grid-template-areas: "r k k" "r g s"; row-gap: 8px; }
+  .rank { grid-area: r; align-self: start; padding-top: 2px; }
+  .kw { grid-area: k; } .gauge { grid-area: g; } .sparkcell { grid-area: s; } .srcs { display: none; }
+  .spark { width: 72px; }
+  .detail { grid-template-columns: minmax(0, 1fr); padding-left: 16px; }
+}
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+</head>
+<body>
+<header class="status">
+  <div class="wrap">
+    <div class="brand">
+      <span class="lamp" id="lamp"></span>
+      <div>
+        <h1>Search Insights</h1>
+        <small>PLC · HMI · Servo · Biến tần · Tự động hóa</small>
+      </div>
+    </div>
+    <div class="meta">
+      <label for="dateSel">Ngày dữ liệu</label>
+      <select id="dateSel"></select>
+      <span id="genAt"></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="summary" id="summary">
+    <button class="sum" data-filter="all" aria-pressed="true"><b id="nAll">–</b><span>Từ khóa đang theo dõi</span></button>
+    <button class="sum up" data-filter="rising" aria-pressed="false"><b id="nUp">–</b><span>Đang tăng</span></button>
+    <button class="sum new" data-filter="new" aria-pressed="false"><b id="nNew">–</b><span>Mới xuất hiện</span></button>
+    <button class="sum opp" data-filter="opp" aria-pressed="false"><b id="nOpp">–</b><span>Cơ hội nội dung</span></button>
+  </div>
+
+  <form class="searchbar" id="searchForm" role="search">
+    <input id="q" type="search" placeholder="Lọc từ khóa, ví dụ: servo, s7 1200, biến tần…" autocomplete="off" aria-label="Tìm từ khóa">
+    <button id="liveBtn" type="submit" hidden>Tra cứu trực tiếp</button>
+  </form>
+  <p class="hint" id="hint">Gõ để lọc danh sách. Chạy <code>python -m creator_insights serve</code> trên máy để tra cứu trực tiếp bất kỳ từ khóa nào.</p>
+
+  <div id="banner"></div>
+
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Nhóm chủ đề"></nav>
+  <div class="tools">
+    <span id="count"></span>
+    <label>Sắp xếp
+      <select id="sortSel">
+        <option value="pop">Độ phổ biến</option>
+        <option value="delta">Mức tăng</option>
+        <option value="opp">Cơ hội nội dung trước</option>
+      </select>
+    </label>
+  </div>
+
+  <section class="list" aria-live="polite">
+    <div class="head"><span>#</span><span>Từ khóa</span><span>Độ phổ biến</span><span>14 ngày</span><span style="text-align:right">Nguồn</span></div>
+    <div id="rows"><div class="empty">Đang tải dữ liệu…</div></div>
+  </section>
+
+  <footer>
+    <p><b>Độ phổ biến</b> là điểm tương đối 0–100, tính từ thứ hạng của từ khóa trong gợi ý tìm kiếm của TikTok (T), Google (G) và YouTube (Y) tại Việt Nam. Đây không phải số lượt tìm kiếm thật.</p>
+    <p><b>Cơ hội nội dung</b> là ước tính: từ khóa có người tìm nhưng TikTok còn ít nội dung hoặc ít tìm kiếm liên quan.</p>
+    <p>Dữ liệu tự cập nhật mỗi sáng. Sửa danh sách chủ đề trong <code>creator_insights/config.json</code>.</p>
+  </footer>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(() => {
+  const CAT_CODE = { plc: "PLC", hmi: "HMI", servo: "SRV", drive: "VFD", knowledge: "KTH", sales: "BÁN" };
+  const TREND = {
+    rising: d => ({ cls: "up", text: `▲ Đang tăng +${d}` }),
+    falling: d => ({ cls: "down", text: `▼ Giảm ${d}` }),
+    new: () => ({ cls: "new", text: "Mới" }),
+    stable: () => null,
+    baseline: () => null,
+  };
+  const state = { data: null, cat: "all", filter: "all", sort: "pop", q: "", open: new Set(), live: false, lookup: null };
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const fold = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
+
+  function store(k, v) { try { v === undefined ? (v = localStorage.getItem(k)) : localStorage.setItem(k, v); return v; } catch { return null; } }
+
+  async function getJSON(url) {
+    const r = await fetch(url, { cache: "no-cache" });
+    if (!r.ok) throw new Error(`${r.status} ${url}`);
+    return r.json();
+  }
+
+  async function init() {
+    state.cat = store("csi.cat") || "all";
+    state.sort = store("csi.sort") || "pop";
+    $("sortSel").value = state.sort;
+    try {
+      const idx = await getJSON("data/index.json").catch(() => ({ dates: [] }));
+      const data = await getJSON("data/latest.json");
+      const dates = idx.dates.length ? idx.dates : [data.date];
+      $("dateSel").innerHTML = dates.map(d => `<option value="${esc(d)}">${esc(fmtDate(d))}</option>`).join("");
+      $("dateSel").value = data.date;
+      load(data);
+    } catch (e) {
+      $("rows").innerHTML = `<div class="empty">Chưa có dữ liệu. Chạy <code>python -m creator_insights collect</code> để tạo báo cáo đầu tiên.</div>`;
+      $("lamp").classList.add("off");
+    }
+    fetch("api/ping").then(r => r.ok && r.json()).then(j => { if (j && j.ok) enableLive(); }).catch(() => {});
+  }
+
+  function enableLive() {
+    state.live = true;
+    $("liveBtn").hidden = false;
+    $("hint").textContent = "Gõ để lọc danh sách, hoặc bấm “Tra cứu trực tiếp” để hỏi TikTok, Google và YouTube ngay bây giờ.";
+  }
+
+  function fmtDate(d) { const [y, m, dd] = d.split("-"); return `${dd}/${m}/${y}`; }
+
+  function load(data) {
+    state.data = data; state.open.clear();
+    const kws = data.keywords;
+    $("nAll").textContent = kws.length;
+    $("nUp").textContent = kws.filter(k => k.trend.status === "rising").length;
+    $("nNew").textContent = kws.filter(k => k.trend.status === "new").length;
+    $("nOpp").textContent = kws.filter(k => k.opportunity).length;
+    const t = new Date(data.generated_at);
+    $("genAt").textContent = isNaN(t) ? "" : `Cập nhật ${t.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} · ${data.stats.history_days ? `so với ${data.stats.history_days} ngày trước` : "xu hướng tăng/giảm có từ ngày mai"}`;
+    if (!data.categories.some(c => c.id === state.cat)) state.cat = "all";
+    renderTabs(); render();
+  }
+
+  function renderTabs() {
+    const cats = [{ id: "all", name: "Đề xuất cho bạn", count: state.data.keywords.length }, ...state.data.categories];
+    $("tabs").innerHTML = cats.map(c => `
+      <button class="tab" role="tab" data-cat="${esc(c.id)}" aria-selected="${c.id === state.cat}">
+        ${c.id !== "all" ? `<code>${esc(CAT_CODE[c.id] || c.id.toUpperCase().slice(0, 3))}</code>` : ""}${esc(c.name)} <em>${c.count}</em>
+      </button>`).join("");
+  }
+
+  function visible() {
+    const src = state.lookup ? state.lookup.keywords : state.data.keywords;
+    let list = src.filter(k =>
+      (state.lookup || state.cat === "all" || k.categories.includes(state.cat)) &&
+      (state.filter === "all" || (state.filter === "opp" ? k.opportunity : k.trend.status === state.filter)) &&
+      (!state.q || fold(k.keyword).includes(fold(state.q))));
+    const by = {
+      pop: (a, b) => b.popularity - a.popularity,
+      delta: (a, b) => b.trend.delta - a.trend.delta || b.popularity - a.popularity,
+      opp: (a, b) => (b.opportunity - a.opportunity) || b.popularity - a.popularity,
+    }[state.sort];
+    return list.slice().sort(by);
+  }
+
+  function spark(series) {
+    const W = 96, H = 28, P = 3;
+    if (!series || series.length < 2) {
+      return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Chưa đủ dữ liệu"><line class="base" x1="${P}" y1="${H - P}" x2="${W - P}" y2="${H - P}"/><circle class="dot" cx="${W - P}" cy="${H - P - (series && series[0] ? series[0].value / 100 * (H - 2 * P) : 0)}" r="2.5"/></svg>`;
+    }
+    const n = series.length, x = i => P + i * (W - 2 * P) / (n - 1), y = v => H - P - v / 100 * (H - 2 * P);
+    const pts = series.map((s, i) => `${x(i).toFixed(1)},${y(s.value).toFixed(1)}`);
+    const last = series[n - 1];
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="Độ phổ biến ${n} ngày gần nhất, hôm nay ${last.value}">
+      <line class="base" x1="${P}" y1="${H - P}" x2="${W - P}" y2="${H - P}"/>
+      <polygon class="area" points="${x(0)},${H - P} ${pts.join(" ")} ${x(n - 1)},${H - P}"/>
+      <polyline class="line" points="${pts.join(" ")}"/>
+      <circle class="dot" cx="${x(n - 1)}" cy="${y(last.value)}" r="2.5"/></svg>`;
+  }
+
+  function chips(k) {
+    const out = [`<span class="chip">${esc(k.intent_label)}</span>`];
+    const t = (TREND[k.trend.status] || (() => null))(Math.abs(k.trend.delta));
+    if (t) out.push(`<span class="chip ${t.cls}">${t.text}</span>`);
+    if (k.hot > 0 || k.time_sensitive) out.push(`<span class="chip hot">Hot trên TikTok</span>`);
+    if (k.opportunity) out.push(`<span class="chip opp">Cơ hội nội dung</span>`);
+    return out.join("");
+  }
+
+  function detail(k) {
+    const rel = k.related.length
+      ? `<ul>${k.related.map(r => `<li><button class="rel" data-rel="${esc(r)}">${esc(r)}</button></li>`).join("")}</ul>`
+      : `<p class="note">TikTok chưa trả về tìm kiếm liên quan cho từ khóa này.</p>`;
+    const src = Object.entries(k.sources).map(([s, n]) => `${{ tiktok: "TikTok", google: "Google", youtube: "YouTube" }[s] || s} ×${n}`).join(", ");
+    return `<div class="detail">
+      <div><h3>Tìm kiếm liên quan</h3>${rel}</div>
+      <div><h3>Ý tưởng video</h3><ul>${k.ideas.map(i => `<li class="idea"><span>${esc(i)}</span><button class="mini" data-copy="${esc(i)}">Chép</button></li>`).join("")}</ul></div>
+      <div><h3>Hashtag gợi ý</h3>
+        <div class="tags">${k.hashtags.map(h => `<span>${esc(h)}</span>`).join("")}</div>
+        <button class="mini" data-copy="${esc(k.hashtags.join(" "))}">Chép hashtag</button>
+        ${k.opportunity ? `<p class="note opp">${esc(k.opportunity_reason)}</p>` : ""}
+        <p class="note">Thấy ở: ${esc(src)}.</p>
+        <div class="actions">
+          <a class="btn" href="${esc(k.tiktok_url)}" target="_blank" rel="noopener">Xem trên TikTok ↗</a>
+          ${state.live ? `<button class="btn ghost" data-live="${esc(k.keyword)}">Tra cứu sâu</button>` : ""}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  function render() {
+    document.querySelectorAll(".sum").forEach(b => b.setAttribute("aria-pressed", b.dataset.filter === state.filter));
+    document.querySelectorAll(".tab").forEach(b => b.setAttribute("aria-selected", b.dataset.cat === state.cat));
+    $("banner").innerHTML = state.lookup
+      ? `<div class="banner"><span>Kết quả tra cứu trực tiếp cho “<b>${esc(state.lookup.query)}</b>” — ${state.lookup.keywords.length} từ khóa</span><button class="mini" id="backBtn">Quay lại báo cáo hằng ngày</button></div>` : "";
+    $("tabs").hidden = !!state.lookup;
+    const list = visible();
+    $("count").textContent = `${list.length} từ khóa`;
+    if (!list.length) {
+      $("rows").innerHTML = `<div class="empty">Không có từ khóa nào khớp bộ lọc.${state.live && state.q ? " Bấm “Tra cứu trực tiếp” để hỏi TikTok." : ""}</div>`;
+      return;
+    }
+    $("rows").innerHTML = list.map((k, i) => {
+      const open = state.open.has(k.keyword);
+      return `<div class="row">
+        <button class="row-main" data-kw="${esc(k.keyword)}" aria-expanded="${open}">
+          <span class="rank">${String(i + 1).padStart(2, "0")}</span>
+          <span class="kw"><strong>${esc(k.keyword)}</strong><span class="chips">${chips(k)}</span></span>
+          <span class="gauge" aria-label="Độ phổ biến ${k.popularity}/100"><span class="bar"><span class="fill" style="width:${k.popularity}%"></span></span><b>${k.popularity}</b></span>
+          <span class="sparkcell">${spark(k.trend.series)}</span>
+          <span class="srcs">${["tiktok", "google", "youtube"].map(s => `<span class="src ${k.sources[s] ? "on" : ""}" title="${s}">${s[0].toUpperCase()}</span>`).join("")}</span>
+        </button>
+        ${open ? detail(k) : ""}
+      </div>`;
+    }).join("");
+  }
+
+  function toast(msg) { const t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove("show"), 1600); }
+
+  async function copy(text, btn) {
+    try { await navigator.clipboard.writeText(text); toast("Đã chép"); }
+    catch { const r = document.createRange(); r.selectNodeContents(btn.previousElementSibling || btn); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Đã chọn sẵn, nhấn Ctrl+C để chép"); }
+  }
+
+  async function liveLookup(q) {
+    if (!q) return;
+    $("rows").innerHTML = `<div class="empty">Đang hỏi TikTok, Google và YouTube về “${esc(q)}”…</div>`;
+    try {
+      const res = await getJSON(`api/lookup?q=${encodeURIComponent(q)}`);
+      if (res.error) throw new Error(res.error);
+      state.lookup = res; state.q = ""; $("q").value = ""; state.filter = "all"; state.open.clear();
+      render();
+    } catch (e) { $("rows").innerHTML = `<div class="empty">Không tra cứu được: ${esc(e.message)}. Kiểm tra mạng rồi thử lại.</div>`; }
+  }
+
+  document.addEventListener("click", e => {
+    const t = e.target.closest("button, a");
+    if (!t) return;
+    if (t.dataset.kw !== undefined) { const k = t.dataset.kw; state.open.has(k) ? state.open.delete(k) : state.open.add(k); render(); }
+    else if (t.dataset.cat) { state.cat = t.dataset.cat; store("csi.cat", state.cat); render(); }
+    else if (t.dataset.filter) { state.filter = state.filter === t.dataset.filter ? "all" : t.dataset.filter; render(); }
+    else if (t.dataset.copy) copy(t.dataset.copy, t);
+    else if (t.dataset.rel) { if (state.live) liveLookup(t.dataset.rel); else { state.q = t.dataset.rel; $("q").value = state.q; state.cat = "all"; render(); } }
+    else if (t.dataset.live) liveLookup(t.dataset.live);
+    else if (t.id === "backBtn") { state.lookup = null; render(); }
+  });
+  $("q").addEventListener("input", e => { state.q = e.target.value.trim(); render(); });
+  $("searchForm").addEventListener("submit", e => { e.preventDefault(); if (state.live) liveLookup($("q").value.trim()); });
+  $("sortSel").addEventListener("change", e => { state.sort = e.target.value; store("csi.sort", state.sort); render(); });
+  $("dateSel").addEventListener("change", async e => {
+    try { state.lookup = null; load(await getJSON(`data/history/${e.target.value}.json`)); }
+    catch { toast("Không mở được dữ liệu ngày này"); }
+  });
+  init();
+})();
+</script>
+</body>
+</html>

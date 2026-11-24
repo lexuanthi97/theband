@@ -1,3 +1,10 @@
+## 🔎 Search Insights Tự động hóa
+
+App tìm nội dung đang hot trên TikTok mỗi ngày (PLC, HMI, servo, biến tần, tự động hóa).
+Dashboard: [`insights/`](insights/) · Hướng dẫn: [`creator_insights/README.md`](creator_insights/README.md)
+
+---
+
 ## Welcome to GitHub Pages
 
 You can use the [editor on GitHub](https://github.com/lexuanthi97/theband/edit/main/README.md) to maintain and preview the content for your website in Markdown files.

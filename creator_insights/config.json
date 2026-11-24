@@ -1,0 +1,59 @@
+{
+  "_comment": "Cấu hình chủ đề. Sửa 'seeds' để thêm từ khóa gốc, 'terms' để app nhận diện từ khóa thuộc nhóm nào.",
+  "region": "VN",
+  "language": "vi",
+  "request_delay_seconds": 0.8,
+  "max_requests": 420,
+  "expand_top_n": 40,
+  "history_days": 30,
+  "max_keywords": 300,
+  "min_per_category": 25,
+  "modifiers": ["", " là gì", " cơ bản", " giá"],
+  "categories": [
+    {
+      "id": "plc",
+      "name": "PLC & lập trình",
+      "hashtags": ["#plc", "#laptrinhplc", "#tudonghoa"],
+      "seeds": ["plc", "lập trình plc", "plc mitsubishi", "plc siemens", "plc delta", "plc omron", "plc xinje", "plc s7 1200", "plc fx3u", "gx works", "tia portal", "ladder"],
+      "terms": ["plc", "ladder", "gx works", "gx developer", "tia portal", "step 7", "s7 1200", "s7-1200", "s7 1500", "s7-1500", "s7 200", "s7-200", "fx3u", "fx5u", "fx1n", "fx3g", "cp1e", "cp1h", "dvp", "codesys", "ispsoft", "wplsoft", "sysmac", "logo siemens", "ngôn ngữ lập trình plc"]
+    },
+    {
+      "id": "hmi",
+      "name": "HMI & SCADA",
+      "hashtags": ["#hmi", "#scada", "#manhinhcamung"],
+      "seeds": ["hmi", "màn hình hmi", "hmi weintek", "hmi mitsubishi", "hmi delta", "scada", "wincc", "màn hình cảm ứng plc"],
+      "terms": ["hmi", "scada", "wincc", "weintek", "easybuilder", "gt designer", "gt works", "dopsoft", "màn hình cảm ứng", "proface", "kinco"]
+    },
+    {
+      "id": "servo",
+      "name": "Servo & điều khiển chuyển động",
+      "hashtags": ["#servo", "#dongcoservo", "#motioncontrol"],
+      "seeds": ["servo", "động cơ servo", "servo mitsubishi", "servo delta", "servo yaskawa", "servo panasonic", "động cơ bước", "step motor", "encoder"],
+      "terms": ["servo", "động cơ bước", "step motor", "stepper", "encoder", "driver servo", "motion", "ethercat", "phát xung", "định vị", "mr-j", "asda", "sigma"]
+    },
+    {
+      "id": "drive",
+      "name": "Biến tần & động cơ",
+      "hashtags": ["#bientan", "#inverter", "#dongco3pha"],
+      "seeds": ["biến tần", "biến tần mitsubishi", "biến tần ls", "cài đặt biến tần", "động cơ 3 pha", "inverter", "vfd"],
+      "terms": ["biến tần", "inverter", "vfd", "động cơ 3 pha", "động cơ điện", "khởi động mềm", "sao tam giác", "đấu động cơ", "mô tơ"]
+    },
+    {
+      "id": "knowledge",
+      "name": "Kiến thức tự động hóa",
+      "hashtags": ["#tudonghoa", "#diencongnghiep", "#kysutudonghoa"],
+      "seeds": ["tự động hóa", "học tự động hóa", "điện công nghiệp", "kỹ sư tự động hóa", "cảm biến", "tủ điện", "modbus", "rs485", "relay trung gian", "khởi động từ"],
+      "terms": ["tự động hóa", "tự động hoá", "automation", "điện công nghiệp", "cảm biến", "sensor", "tủ điện", "modbus", "rs485", "rs232", "profinet", "profibus", "relay", "rơ le", "khởi động từ", "contactor", "aptomat", "mạch điều khiển", "điện tự động", "kỹ sư điện"]
+    },
+    {
+      "id": "sales",
+      "name": "Mua bán thiết bị",
+      "hashtags": ["#thietbitudonghoa", "#plcgiare", "#banhangtudonghoa"],
+      "seeds": ["mua plc", "giá plc", "thiết bị tự động hóa", "plc cũ", "servo cũ", "biến tần cũ", "linh kiện tự động hóa", "plc giá rẻ"],
+      "terms": ["giá", "mua", "bán", "báo giá", "cũ", "giá rẻ", "chính hãng", "thanh lý", "nhập khẩu", "phân phối", "đại lý", "thiết bị tự động"]
+    }
+  ],
+  "brands": ["mitsubishi", "siemens", "omron", "delta", "xinje", "fatek", "schneider", "keyence", "yaskawa", "panasonic", "weintek", "ls", "fuji", "abb", "allen bradley", "inovance", "kinco", "autonics", "hitachi", "danfoss"],
+  "exclude_terms": ["ô tô", "oto", "xe máy", "xe điện", "solar", "năng lượng mặt trời", "điện mặt trời", "kích điện", "12v", "điều hòa", "máy lạnh", "tủ lạnh", "máy giặt", "game", "car", "lidar", "đồ chơi", "rc"],
+  "weak_terms": ["lập trình", "động cơ", "điều khiển", "cnc", "arduino", "robot", "máy", "điện"]
+}
